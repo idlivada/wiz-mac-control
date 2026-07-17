@@ -6,38 +6,35 @@ struct PopoverView: View {
     @State private var showSettings = false
 
     var body: some View {
-        @Bindable var app = app
         VStack(alignment: .leading, spacing: 12) {
             header
-
-            Picker("Target", selection: $app.target) {
-                Text("Both").tag(Target.both)
-                Text(app.bulbs[0].name).tag(Target.single(0))
-                Text(app.bulbs[1].name).tag(Target.single(1))
-            }
-            .pickerStyle(.segmented)
-            .labelsHidden()
-
+            targetSelector
+            powerRow
             offlineNotice
 
-            HStack(alignment: .center, spacing: 14) {
-                ColorWheelView(
-                    rgb: app.displayBulb.rgb,
-                    isActive: !app.displayBulb.whiteMode
-                ) { app.setColor($0) }
+            if app.anyTargetOn {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .center, spacing: 14) {
+                        ColorWheelView(
+                            rgb: app.displayBulb.rgb,
+                            isActive: !app.displayBulb.whiteMode
+                        ) { app.setColor($0) }
 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Color")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    swatchGrid
-                    Text(currentHex)
-                        .font(.caption2.monospaced())
-                        .foregroundStyle(.tertiary)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Color")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                            swatchGrid
+                            Text(currentHex)
+                                .font(.caption2.monospaced())
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
+
+                    sliders
                 }
+                .transition(.opacity)
             }
-
-            sliders
 
             Divider()
             PresetRowView()
@@ -46,6 +43,7 @@ struct PopoverView: View {
         }
         .padding(14)
         .frame(width: 320)
+        .animation(.easeInOut(duration: 0.18), value: app.anyTargetOn)
         .onAppear {
             Task { await app.refreshAll() }
         }
@@ -106,14 +104,73 @@ struct PopoverView: View {
             }
             .buttonStyle(.borderless)
             .help("Re-read bulb state")
+        }
+    }
+
+    private var targetSelector: some View {
+        HStack(spacing: 2) {
+            segment(title: "Both", target: .both, dotBulbs: app.bulbs)
+            segment(title: app.bulbs[0].name, target: .single(0), dotBulbs: [app.bulbs[0]])
+            segment(title: app.bulbs[1].name, target: .single(1), dotBulbs: [app.bulbs[1]])
+        }
+        .padding(2)
+        .background(RoundedRectangle(cornerRadius: 7).fill(Color.primary.opacity(0.06)))
+    }
+
+    private func segment(title: String, target: Target, dotBulbs: [Bulb]) -> some View {
+        let selected = app.target == target
+        return Button {
+            app.target = target
+        } label: {
+            HStack(spacing: 5) {
+                HStack(spacing: 3) {
+                    ForEach(dotBulbs) { bulb in
+                        Circle()
+                            .fill(bulb.isOn ? bulb.lightColor : Color.gray.opacity(0.45))
+                            .overlay(Circle().strokeBorder(Color.primary.opacity(0.2), lineWidth: 0.5))
+                            .frame(width: 7, height: 7)
+                    }
+                }
+                Text(title)
+                    .font(.caption)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 4)
+            .background(
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(selected ? Color(nsColor: .controlBackgroundColor) : .clear)
+                    .shadow(color: .black.opacity(selected ? 0.2 : 0), radius: 1, y: 0.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private var powerRow: some View {
+        HStack {
+            Text(powerLabel)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Spacer()
             Toggle("Power", isOn: Binding(
-                get: { app.displayBulb.isOn },
+                get: { app.anyTargetOn },
                 set: { app.setPower($0) }
             ))
             .toggleStyle(.switch)
             .controlSize(.small)
             .labelsHidden()
-            .help("Turn \(app.target == .both ? "both bulbs" : app.displayBulb.name) on or off")
+        }
+    }
+
+    private var powerLabel: String {
+        switch app.target {
+        case .both:
+            let onCount = app.bulbs.filter(\.isOn).count
+            if onCount == 0 { return "Both bulbs · Off" }
+            if onCount == app.bulbs.count { return "Both bulbs · On" }
+            return "Both bulbs · \(onCount) of \(app.bulbs.count) on"
+        case .single(let i):
+            return "\(app.bulbs[i].name) · \(app.bulbs[i].isOn ? "On" : "Off")"
         }
     }
 
@@ -188,7 +245,6 @@ struct PopoverView: View {
                 }
             }
         }
-        .disabled(!app.displayBulb.isOn && !app.displayBulb.online)
     }
 
     private var footer: some View {
@@ -226,5 +282,14 @@ struct PopoverView: View {
                 }
             }
         }
+    }
+}
+
+extension Bulb {
+    /// The color this bulb is currently emitting, for status dots.
+    var lightColor: Color {
+        whiteMode
+            ? ColorMath.kelvinToColor(temp)
+            : Color(red: Double(rgb.r) / 255, green: Double(rgb.g) / 255, blue: Double(rgb.b) / 255)
     }
 }

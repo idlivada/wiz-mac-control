@@ -45,6 +45,11 @@ final class AppState {
         }
     }
 
+    /// True when any bulb in the current target is on (mixed state counts as on).
+    var anyTargetOn: Bool {
+        targetBulbs.contains(where: \.isOn)
+    }
+
     /// The bulb whose values the controls display (bulb 1 stands in for "Both").
     var displayBulb: Bulb {
         switch target {

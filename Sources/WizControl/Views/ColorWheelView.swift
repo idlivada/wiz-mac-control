@@ -20,6 +20,16 @@ enum ColorMath {
         return RGB(r: Int(round(r * 255)), g: Int(round(g * 255)), b: Int(round(b * 255)))
     }
 
+    /// Rough visual approximation of a white-mode color temperature (2200–6500 K).
+    static func kelvinToColor(_ kelvin: Double) -> Color {
+        let t = min(max((kelvin - 2200) / (6500 - 2200), 0), 1)
+        return Color(
+            red: 1.0 + (0.85 - 1.0) * t,
+            green: 0.72 + (0.92 - 0.72) * t,
+            blue: 0.45 + (1.0 - 0.45) * t
+        )
+    }
+
     static func rgbToHS(_ rgb: RGB) -> (h: Double, s: Double) {
         let r = Double(rgb.r) / 255, g = Double(rgb.g) / 255, b = Double(rgb.b) / 255
         let maxC = max(r, g, b), minC = min(r, g, b)
