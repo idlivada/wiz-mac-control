@@ -8,6 +8,9 @@ struct PopoverView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             header
+            PresetRowView()
+            footer
+            Divider()
             targetSelector
             powerRow
             offlineNotice
@@ -35,11 +38,6 @@ struct PopoverView: View {
                 }
                 .transition(.opacity)
             }
-
-            Divider()
-            PresetRowView()
-            Divider()
-            footer
         }
         .padding(14)
         .frame(width: 320)
