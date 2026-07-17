@@ -26,14 +26,14 @@ struct PopoverView: View {
                     isActive: !app.displayBulb.whiteMode
                 ) { app.setColor($0) }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 8) {
                     Text("Color")
                         .font(.caption)
                         .foregroundStyle(.secondary)
-                    Text("Drag to pick a color. Moving the temperature slider switches back to white.")
-                        .font(.caption2)
+                    swatchGrid
+                    Text(currentHex)
+                        .font(.caption2.monospaced())
                         .foregroundStyle(.tertiary)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -49,6 +49,49 @@ struct PopoverView: View {
         .onAppear {
             Task { await app.refreshAll() }
         }
+    }
+
+    private static let swatches: [RGB] = [
+        RGB(r: 255, g: 0, b: 0), RGB(r: 255, g: 128, b: 0),
+        RGB(r: 255, g: 255, b: 0), RGB(r: 0, g: 255, b: 0),
+        RGB(r: 0, g: 255, b: 255), RGB(r: 0, g: 0, b: 255),
+        RGB(r: 128, g: 0, b: 255), RGB(r: 255, g: 0, b: 255),
+    ]
+
+    private var swatchGrid: some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.fixed(24), spacing: 8), count: 4),
+                  alignment: .leading, spacing: 8) {
+            ForEach(Self.swatches, id: \.self) { swatch in
+                let selected = !app.displayBulb.whiteMode && app.displayBulb.rgb == swatch
+                Button {
+                    app.setColor(swatch)
+                } label: {
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(Color(
+                            red: Double(swatch.r) / 255,
+                            green: Double(swatch.g) / 255,
+                            blue: Double(swatch.b) / 255
+                        ))
+                        .frame(width: 22, height: 22)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 5)
+                                .strokeBorder(
+                                    selected ? Color.primary : Color.primary.opacity(0.15),
+                                    lineWidth: selected ? 2 : 1
+                                )
+                        )
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var currentHex: String {
+        let rgb = app.displayBulb.rgb
+        if app.displayBulb.whiteMode {
+            return "white \(Int(app.displayBulb.temp)) K"
+        }
+        return String(format: "#%02X%02X%02X", rgb.r, rgb.g, rgb.b)
     }
 
     private var header: some View {

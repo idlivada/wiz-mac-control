@@ -44,7 +44,7 @@ struct ColorWheelView: View {
     var isActive: Bool
     var onChange: (RGB) -> Void
 
-    private let size: CGFloat = 120
+    private let size: CGFloat = 140
 
     var body: some View {
         ZStack {
@@ -102,7 +102,17 @@ struct ColorWheelView: View {
         let dy = location.y - size / 2
         var h = atan2(dy, dx) / (2 * .pi)
         if h < 0 { h += 1 }
-        let s = min(1, sqrt(dx * dx + dy * dy) / (size / 2 - 8))
+
+        // Snap to the nearest 30° anchor hue (red, orange, yellow, ...) within ±4°.
+        let anchor = (h * 12).rounded() / 12
+        if abs(h - anchor) <= 4.0 / 360 {
+            h = anchor.truncatingRemainder(dividingBy: 1)
+        }
+
+        // Snap near-rim picks to full saturation.
+        var s = min(1, sqrt(dx * dx + dy * dy) / (size / 2 - 8))
+        if s > 0.92 { s = 1 }
+
         onChange(ColorMath.hsvToRGB(h: h, s: s, v: 1))
     }
 }

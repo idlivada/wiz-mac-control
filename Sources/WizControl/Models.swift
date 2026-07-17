@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-struct RGB: Codable, Equatable {
+struct RGB: Codable, Equatable, Hashable {
     var r: Int
     var g: Int
     var b: Int
