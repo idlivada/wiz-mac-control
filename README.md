@@ -2,6 +2,12 @@
 
 macOS menu bar app for controlling two Wiz smart bulbs over the local network (UDP port 38899).
 
+<p align="center">
+  <img src="docs/screenshot.png" width="330" alt="Wiz Control popover showing presets, per-bulb power dots, a color wheel with swatches, and temperature and brightness sliders">
+</p>
+
+Your lights, one click from the menu bar — no phone app, no cloud, no account. Spin the color wheel or hit a swatch for an exact color, slide between candlelight-warm and daylight-cool white, and dim to taste; the bulbs follow in real time as you drag. Colored dots show each bulb's live state at a glance, and one-click presets bring back your favorite scenes — each bulb remembering its own color, brightness, and power. Everything happens over your local network via direct UDP, so it's instant and works even when the internet doesn't.
+
 ## Features
 
 - Menu bar popover with color wheel, temperature slider (2200–6500 K), and brightness slider
