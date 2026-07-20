@@ -12,11 +12,28 @@ macOS menu bar app for controlling two Wiz smart bulbs over the local network (U
 - Launch-at-login toggle
 - Bulb IPs editable in the popover (gear icon), persisted across launches
 
-## Build
+## Install
 
-Requires only Swift command-line tools (no Xcode):
+### From a release (no build tools needed)
+
+1. Download `WizControl-x.y.z.zip` from the [latest release](https://github.com/idlivada/wiz-mac-control/releases/latest)
+2. Unzip it and move `WizControl.app` to `/Applications`
+3. The app is ad-hoc signed (not notarized), so macOS quarantines downloaded copies. Clear it with:
+
+   ```sh
+   xattr -dr com.apple.quarantine /Applications/WizControl.app
+   ```
+
+   (or right-click the app → Open → Open)
+4. Launch it — the lightbulb icon appears in the menu bar
+
+### From source
+
+Requires only the Swift command-line tools (no Xcode):
 
 ```sh
+git clone https://github.com/idlivada/wiz-mac-control.git
+cd wiz-mac-control
 ./build.sh
 open build/WizControl.app          # or: cp -R build/WizControl.app /Applications/
 ```
